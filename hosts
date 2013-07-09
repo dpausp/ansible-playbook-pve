@@ -1,0 +1,10 @@
+[all]
+129.187.87.37
+
+[local]
+localhost
+
+[all:vars]
+admin_user=stenzel 
+admin_user_pubkeyfile=/home/stenzel/.ssh/id_tobias_stenzel_tum.pub
+

@@ -1,0 +1,17 @@
+---
+# setup access to machine
+
+- name: setup (remote) access
+  hosts: all
+  vars:
+     admin_user_pubkey: "{{ lookup('file', admin_user_pubkeyfile) }}"
+  tasks:
+    - name: install sudo
+      apt: pkg=sudo state=present
+
+    - name: add admin user sudo group
+      user: name={{ admin_user }} groups=sudo append=true
+
+    - name: set up SSH authorized key for admin user
+      authorized_key: user={{ admin_user }} key='{{ admin_user_pubkey }}' state=present
+

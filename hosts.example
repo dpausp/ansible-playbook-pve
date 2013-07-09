@@ -1,0 +1,3 @@
+[all]
+somehost admin_user=admin admin_user_pubkeyfile=/home/admin/.ssh/id_admin.pub
+

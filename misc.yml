@@ -1,0 +1,14 @@
+---
+# misc installs
+
+- name: install some important tools 
+  hosts: all
+  sudo: yes
+  tasks:
+    - name: install basic tools
+      apt: pkg={{ item }} state=present
+      with_items:
+        - screen
+        - mosh
+        - vim-gtk
+        - git

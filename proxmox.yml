@@ -1,0 +1,71 @@
+---
+# install proxmox VE (part 1)
+#
+
+- name: install proxmox VE
+  hosts: all
+  sudo: yes
+  tasks:
+    - name: add the Proxmox VE repository
+      lineinfile: "state=present dest=/etc/apt/sources.list
+      regexp='^deb http://download.proxmox.com'
+      line='deb http://download.proxmox.com/debian wheezy pve'"
+
+    - name: add the Proxmox VE repository key
+      apt_key: url=http://download.proxmox.com/debian/key.asc state=present
+
+    - name: run sysupgrade
+      apt: update_cache=yes upgrade=dist
+     
+    - name: install proxmox VE firmware
+      apt: pkg=pve-firmware state=latest
+
+    - name: install proxmox VE kernel
+      apt: pkg=pve-kernel-2.6.32-20-pve state=latest
+
+    - name: set default boot to VE kernel
+      lineinfile: "state=present dest=/etc/default/grub
+      regexp='^GRUB_DEFAULT='
+      line=GRUB_DEFAULT=2"
+
+    - name: update grub
+      command: update-grub
+
+    - name: setup IPV4 forwarding for NAT
+      lineinfile: "state=present dest=/etc/sysctl.conf
+      regexp='^#?net.ipv4.ip_forward'
+      line=net.ipv4.ip_forward=1"
+      tags:
+        - nat
+
+    - name: reboot machine
+      command: /sbin/reboot -t now
+    
+    - name: wait for shutdown...
+      local_action: wait_for host={{ inventory_hostname }} port=22 state=stopped timeout=120
+      sudo: no
+
+    - name: wait until SSH becomes ready...
+      local_action: wait_for host={{ inventory_hostname }} port=22 state=started timeout=120
+      sudo: no
+
+    - name: is it running?
+      command: uptime
+
+    - name: install dependency packages for PVE
+      apt: pkg={{ item }} state=present
+      with_items:
+        - ntp 
+        - postfix 
+        - ksm-control-daemon 
+        - vzprocps 
+        - open-iscsi 
+        - bootlogd
+      tags:
+        - after-reboot
+
+    - name: install dependency packages for PVE
+      apt: pkg=proxmox-ve-2.6.32 state=present
+      tags:
+        - after-reboot
+    
